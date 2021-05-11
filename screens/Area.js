@@ -6,18 +6,21 @@ export default class Area extends Component {
     constructor() {
         super()
         this.state = {
-            hasPermission: null
+            hasPermission: null,
+            lat: '',
+            lng: ''
         }
     }
     getLocationPermission = async () => {
         const { status } = await Permissions.askAsync(Permissions.LOCATION_FOREGROUND)
         this.setState({
             hasPermission: status === 'granted',
+        }, () => {
+            this.getLocation()
         })
 
     }
     getLocation = () => {
-        console.log(this.state.hasPermission)
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(this.geoSuccess, this.geoError);
 
@@ -25,11 +28,13 @@ export default class Area extends Component {
             alert("Geolocation is not supported by this browser.");
         }
     }
-    geoSuccess(position) {
+    geoSuccess = (position) => {
         var lat = position.coords.latitude;
         var lng = position.coords.longitude;
-        alert("lat:" + lat + " lng:" + lng);
-        return <Text>Lat: {lat} lng: {lng}</Text>
+        this.setState({
+            lat: lat,
+            lng: lng
+        })
     }
     geoError() {
         alert("Geocoder failed.");
@@ -47,7 +52,14 @@ export default class Area extends Component {
             )
         }
         else if (hasPermission === true) {
-            this.getLocation()
+            return (
+                <View>
+                    <Text style={styles.title}>Tree-Check AQI of your area </Text>
+                    <Text>lat: {this.state.lat} lng:{this.state.lng}</Text>
+                </View>
+            )
+            // this.getLocation()
+
         }
     }
 }
@@ -63,8 +75,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#964B00',
-        width:800,
-        height:500
+        width: 800,
+        height: 500
     },
     button: {
         width: 100,
