@@ -5,7 +5,7 @@ export default class HomeScreen extends Component {
     render() {
         return (
             <View style={styles.container}>
-                <Text style={styles.title}>Tree-Check AQI of your area </Text>
+                <Text style={styles.title}>AQI-Check AQI of your area </Text>
                 <Text style={{ fontWeight: 'bold' }}>To get AQI press the proceed button</Text>
                 <Text style={{ fontSize: 15, fontWeight: 'bold' }}>About Trees</Text>
                 <Text style={styles.text}>There are many different types of trees that grow.

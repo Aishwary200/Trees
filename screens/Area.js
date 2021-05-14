@@ -2,13 +2,16 @@ import React, { Component } from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import * as Permissions from 'expo-permissions'
 
+
 export default class Area extends Component {
     constructor() {
         super()
         this.state = {
             hasPermission: null,
             lat: '',
-            lng: ''
+            lng: '',
+            aqi: '',
+            city: ''
         }
     }
     getLocationPermission = async () => {
@@ -17,6 +20,17 @@ export default class Area extends Component {
             hasPermission: status === 'granted',
         }, () => {
             this.getLocation()
+        })
+
+    }
+    Aqiscreen = async (lat, lng) => {
+        var AQI = await fetch('https://api.weatherbit.io/v2.0/current/airquality?lat=' + lat + '&lon=' + lng + '&key=f61448d0bec84f3da88005b10afe56d9')
+        var AQIJson = await AQI.json();
+        var aqi = AQIJson.data[0].aqi;
+        var cityName = AQIJson.city_name;
+        this.setState({
+            aqi: aqi,
+            city: cityName
         })
 
     }
@@ -34,32 +48,59 @@ export default class Area extends Component {
         this.setState({
             lat: lat,
             lng: lng
+        }, () => {
+            this.Aqiscreen(this.state.lat, this.state.lng)
         })
+
     }
     geoError() {
         alert("Geocoder failed.");
+    }
+    componentDidMount() {
+        this.getLocationPermission()
     }
     render() {
         const hasPermission = this.state.hasPermission
         if (hasPermission === null) {
             return (
                 <View style={styles.container}>
-                    <Text style={styles.title}>Tree-Check AQI of your area </Text>
-                    <TouchableOpacity style={styles.button} onPress={this.getLocationPermission}>
-                        <Text>Get AQI</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.title}>Loading ...</Text>
                 </View>
             )
         }
-        else if (hasPermission === true) {
+        if (hasPermission === true) {
             return (
-                <View>
-                    <Text style={styles.title}>Tree-Check AQI of your area </Text>
-                    <Text>lat: {this.state.lat} lng:{this.state.lng}</Text>
-                </View>
-            )
-            // this.getLocation()
+                <View style={{ backgroundColor: 'green', height: 700, width: 1400, alignItems: 'center' }}>
+                    <Text style={styles.title}>AQI-Check AQI of your area </Text>
+                    {this.state.aqi === '' ? <Text style={styles.text}>Loading...</Text>
+                        : <Text style={styles.text}>city: {this.state.city} AQI:{this.state.aqi}</Text>
+                    }
 
+                    {
+                    this.state.aqi === '' ? <Text style={styles.text}></Text> :
+                    this.state.aqi > 0 && this.state.aqi <= 50 ?
+                    <Text style={styles.text}>Your AQI: Good</Text> :
+                    this.state.aqi > 50 && this.state.aqi <= 100 ?
+                    <Text style={styles.text}>Your AQI: Moderate</Text> :
+                    this.state.aqi > 100 && this.state.aqi <= 150 ?
+                    <Text style={styles.text}> Your AQI: Unhealthy for sensitive groups</Text> :
+                    this.state.aqi > 150 && this.state.aqi <= 200 ?
+                    <Text style={styles.text}>Your AQI: Unhealthy</Text> :
+                    this.state.aqi > 200 && this.state.aqi <= 300 ?
+                    <Text style={styles.text}>Your AQI: Very Unhealthy</Text> :
+                    this.state.aqi > 300 ?
+                    <Text style={styles.text}>Your AQI: Hazardous</Text> :
+                    <Text style={styles.text}>App failed please restart the app</Text>
+                    }
+                    <Text style={styles.text}>0-50 - Good</Text>
+                    <Text style={styles.text}>51-100 - Moderate</Text>
+                    <Text style={styles.text}>101-150 - Unhealthy for sensitive groups(adults,children,lung disease,etc.)</Text>
+                    <Text style={styles.text}>151-200 - Unhealthy</Text>
+                    <Text style={styles.text}>201-300 - Very Unhealthy</Text>
+                    <Text style={styles.text}>301-500 - Hazardous</Text>
+                </View>
+
+            )
         }
     }
 }
@@ -74,7 +115,6 @@ const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#964B00',
         width: 800,
         height: 500
     },
@@ -96,4 +136,10 @@ const styles = StyleSheet.create({
         shadowRadius: 10.32,
         elevation: 16,
     },
+    text: {
+        marginTop: 10,
+        paddingTop: 5,
+        fontWeight: 'bold',
+        fontSize: 15
+    }
 })
